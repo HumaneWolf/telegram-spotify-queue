@@ -35,6 +35,20 @@ if not token:
 
 spotify = spotipy.Spotify(auth=token)
 
+def auth_guard(cb):
+    def check_token(bot, update, *args, **kwargs):
+        global sp_oauth, spotify
+        
+        token_info = sp_oauth.get_cached_token()
+        if not token_info or sp_oauth.is_token_expired(token_info):
+            token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+
+        token = token_info['access_token']
+        spotify = spotipy.Spotify(auth=token)
+        
+        cb(bot, update, *args, **kwargs)
+    
+    return auth_guard
 
 # Data
 class User:
@@ -171,9 +185,9 @@ d = tg_updater.dispatcher
 d.add_handler(CommandHandler('start', start))
 d.add_handler(CommandHandler('help', start))
 
-d.add_handler(CommandHandler('confirm', confirm_song))
-d.add_handler(MessageHandler(Filters.text, on_message))
-
+# These handlers relates to spotify api, and need constant re-checking of the current token
+d.add_handler(CommandHandler('confirm', auth_guard(confirm_song))
+d.add_handler(MessageHandler(Filters.text, auth_guard(on_message))
 
 if __name__ == '__main__':
     tg_updater.start_polling()
