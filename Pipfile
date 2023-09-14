@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-python-telegram-bot = "*"
+python-telegram-bot = "==12"
 gevent = "*"
 requests = "*"
 six = "*"
